@@ -1,12 +1,15 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+@using ToDoList.Web.Components.Pages.Base
 @using ToDoList.Web.Data.DTO
 @using ToDoList.Web.Helpers
 @using ToDoList.Web.Services
+@inherits ComponentBaseClass<ToDoItemFullModel>
 @inject ToDoItemService service
 
 <PageTitle>Список задач</PageTitle>
 
-@if (!ToDoItems.Any())
+@if (!IsRender)
 {
     <p><em>Loading...</em></p>
 }
@@ -22,11 +25,21 @@ else
                 <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.PriorityValue))</th>
                 <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.UserName))</th>
                 <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.IsCompleted))</th>
+                <th colspan="2">Действия</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in ToDoItems)
+            @if (!ToDoItems.Any())
             {
+                <tr>
+                    <td colspan="9">Задачи осутствуют</td>
+                </tr>
+            }
+            @foreach (var toDoItem in ToDoItems ?? new())
+            {
+                var item = toDoItem;
+                var deleteId = item.Id + "delete_btn_id";
+                var updId = item.Id + "upd_btn_id";
                 <tr>
                     <td>@item.Id</td>
                     <td>@item.Title</td>
@@ -36,29 +49,118 @@ else
                     <td>@item.UserName</td>
                     <td>@if(item.IsCompleted)
                         {
-                            <input type="checkbox" checked/>
+                            <input type="checkbox" checked disabled/>
                         }
                         else
                         {
-                            <input type="checkbox" />
+                            <input type="checkbox" disabled />
                         }
+                    </td>
+                    <td>
+                        <button class="btn btn-primary"
+                                id="@updId"
+                                @onclick="@(() => { SelectedToDoItem = item; 
+                                                    Title = "Редактирование";
+                                                    ShowEditForm = true; })">
+                            Редактировать
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary"
+                                id="@deleteId"
+                                @onclick="@(() => { SelectedToDoItem = item; 
+                                                    Message = "Вы подтверждаете удаление ";
+                                                    Title = "Удаление"; 
+                                                    ShowDeleteConfarmation = true; })">
+                            Удалить
+                        </button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+
+    @if (ShowEditForm)
+    {
+        <ModalWindow Title="@Title"
+                     InvokeParent="@(() => { ShowEditForm = false; })">
+                 
+        </ModalWindow>
+    }
+
+    @if (ShowDeleteConfarmation)
+    {
+        <ModalWindow Title="@Title"
+                     InvokeParent="@(() => { ShowDeleteConfarmation = false; })">
+            <div>Вы подтверждаете удаление задачи? </div>
+            <br />
+            <div>
+                <button type="button"
+                        @onclick="@(async() => await DeleteItem())">
+                    Удалить
+                </button>
+            </div>
+        </ModalWindow>
+    }
+
+    @if (ShowActionResult)
+    {
+        <ModalWindow Title="@Title"
+                     InvokeParent="@(() => { SelectedToDoItem = null; ShowActionResult = false; })">
+            <div>@Message</div>
+        </ModalWindow>
+    }
 }
 
 @code {
     private List<ToDoItemFullModel> ToDoItems { get; set; } = new();
 
-    private Type ModelType { get; } = typeof(ToDoItemFullModel);
+    private ToDoItemFullModel SelectedToDoItem { get; set; }
+
+    private bool ShowEditForm { get; set; }
+
+    private bool ShowDeleteConfarmation { get; set; }
+
+    private bool ShowActionResult { get; set; }
+
+    private bool ShouldUpdate { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         await InitToDoItems();
         await base.OnInitializedAsync();
+        IsRender = true;
+    }
+
+    private void IncrementCount()
+    {
+        var currentCount = 0;
+        currentCount++;
     }
 
     private async Task InitToDoItems() => ToDoItems = await service.GetListAsync();
+
+    private async Task DeleteItem()
+    {
+        var result = await service.DeleteAsync(SelectedToDoItem.Id, Token);
+
+        if (result)
+        {
+            Title = "Результат удаления";
+            Message = "Операция успешно завершена";
+            ShouldUpdate = true;
+        }
+        else
+        {
+            Title = "Предупреждение";
+            Message = "Операция закончилась с ошибкой";
+        }
+
+        if (ShouldUpdate) 
+            await InitToDoItems();
+
+        ShowDeleteConfarmation = false;
+        ShowEditForm = false;
+        ShowActionResult = true;
+    }
 }
