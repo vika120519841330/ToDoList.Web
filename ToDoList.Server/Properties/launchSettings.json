@@ -1,9 +1,8 @@
 ﻿{
   "profiles": {
-    "http": {
+    "ToDoList.Server": {
       "commandName": "Project",
       "applicationUrl": "http://localhost:5089",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {

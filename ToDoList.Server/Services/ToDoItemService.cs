@@ -55,8 +55,9 @@ public class ToDoItemService : ServiceBase
         }
 
         var itemToAdd = mapper.Map<ToDoItem>(item);
-        var addedItem = await appRepositories.ToDoItems.CreateAsync(itemToAdd, token);
-        Message = appRepositories?.ToDoItems?.Message ?? string.Empty;
+        var service = appRepositories.ToDoItems;
+        var addedItem = await service.CreateAsync(itemToAdd, token);
+        Message = service?.Message ?? string.Empty;
 
         if (addedItem == null) return null;
 
@@ -71,9 +72,10 @@ public class ToDoItemService : ServiceBase
             return null;
         }
 
-        var itemToAdd = mapper.Map<ToDoItem>(item);
-        var updatedItem = await appRepositories.ToDoItems.UpdateAsync(itemToAdd, token);
-        Message = appRepositories?.ToDoItems?.Message ?? string.Empty;
+        var itemToAdd = mapper.Map<ToDoItem>(item); 
+        var service = appRepositories.ToDoItems;
+        var updatedItem = await service.UpdateAsync(itemToAdd, token);
+        Message = service?.Message ?? string.Empty;
 
         if (updatedItem == null) return null;
 
@@ -88,8 +90,9 @@ public class ToDoItemService : ServiceBase
             return false;
         }
 
-        var result = await appRepositories.ToDoItems.RemoveAsync(itemId, token);
-        Message = appRepositories?.ToDoItems?.Message ?? string.Empty;
+        var service = appRepositories.ToDoItems;
+        var result = await service.RemoveAsync(itemId, token);
+        Message = service?.Message ?? string.Empty;
 
         return result;
     }

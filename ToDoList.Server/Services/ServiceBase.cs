@@ -14,5 +14,5 @@ public abstract class ServiceBase: INotify
         this.mapper = mapper;
     }
 
-    public string Message { get; protected set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
 }

@@ -1,5 +1,5 @@
 ﻿namespace ToDoList.Interfaces;
 public interface INotify
 { 
-	string Message { get; }
+	string Message { get; set; }
 }
