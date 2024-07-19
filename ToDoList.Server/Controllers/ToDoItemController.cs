@@ -45,7 +45,7 @@ public class ToDoItemController : ControllerBase
             return Ok(result);
     }
 
-    [HttpDelete("/{itemId}")]
+    [HttpDelete("{itemId}")]
     [ProducesResponseType(typeof(ActionResult), 200)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> Remove([FromRoute] int itemId, [FromHeader] CancellationToken token = default)

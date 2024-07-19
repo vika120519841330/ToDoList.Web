@@ -1,17 +1,14 @@
 using ToDoList.Web.Components;
+using ToDoList.Web.Configs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-var app = builder.Build();
+builder.Services.AddServices(builder.Configuration);
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
-}
+var app = builder.Build();
 
 app.UseHttpsRedirection();
 
