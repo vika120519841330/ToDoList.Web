@@ -18,7 +18,7 @@ public class ToDoItem
     public bool IsCompleted { get; set; }
 
     [Column("due_date")]
-    public DateTime? DueDate { get; set; }
+    public DateTime DueDate { get; set; }
 
     [Column("priority_id")]
     public int PriorityId { get; set; }

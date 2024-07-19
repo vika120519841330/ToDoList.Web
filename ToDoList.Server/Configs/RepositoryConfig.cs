@@ -2,6 +2,7 @@
 using ToDoList.Server.Data.Models.DBModels;
 using ToDoList.Repositories;
 using ToDoList.Interfaces;
+using ToDoList.Server.Repositories;
 
 namespace ToDoList.Server.Configs;
 
@@ -12,5 +13,6 @@ public static class RepositoryConfig
         services.AddTransient<ITRepository<ToDoItem>, TRepository<ToDoItem>>();
         services.AddTransient<ITRepository<Priority>, TRepository<Priority>>();
         services.AddTransient<ITRepository<User>, TRepository<User>>();
+        services.AddTransient<AppRepositories>();
     }
 }

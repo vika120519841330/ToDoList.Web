@@ -4,6 +4,8 @@ using ToDoList.Server.Services;
 
 namespace ToDoList.Server.Controllers;
 
+[ApiController]
+[Route("[controller]")]
 public class PriorityController : ControllerBase
 {
     private readonly PriorityService priorityService;

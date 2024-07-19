@@ -17,7 +17,7 @@ public class ToDoItemResponse
 
     public bool IsCompleted { get; set; }
 
-    public DateTime? DueDate { get; set; }
+    public DateTime DueDate { get; set; }
 
     public int PriorityId { get; set; }
 

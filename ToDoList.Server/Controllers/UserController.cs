@@ -4,6 +4,8 @@ using ToDoList.Server.Services;
 
 namespace ToDoList.Server.Controllers;
 
+[ApiController]
+[Route("[controller]")]
 public class UserController : ControllerBase
 {
     private readonly UserService userService;

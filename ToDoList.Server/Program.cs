@@ -10,6 +10,8 @@ builder.Logging.AddSerilog();
 builder.Host.ConfigureSeqSerilog(builder.Environment);
 builder.Environment.ConfigureSeqSerilog();
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 builder.Services.AddDBContext(builder.Configuration);
 builder.Services.AddRepositories();
 builder.Services.AddServices();
