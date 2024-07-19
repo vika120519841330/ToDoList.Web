@@ -1,0 +1,64 @@
+﻿@page "/"
+@using ToDoList.Web.Data.DTO
+@using ToDoList.Web.Helpers
+@using ToDoList.Web.Services
+@inject ToDoItemService service
+
+<PageTitle>Список задач</PageTitle>
+
+@if (!ToDoItems.Any())
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.Id))</th>
+                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.Title))</th>
+                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.Description))</th>
+                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.DueDate))</th>
+                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.PriorityValue))</th>
+                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.UserName))</th>
+                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.IsCompleted))</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in ToDoItems)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Title</td>
+                    <td>@item.Description</td>
+                    <td>@item.DueDate.ToShortDateString()</td>
+                    <td>@item.PriorityValue</td>
+                    <td>@item.UserName</td>
+                    <td>@if(item.IsCompleted)
+                        {
+                            <input type="checkbox" checked/>
+                        }
+                        else
+                        {
+                            <input type="checkbox" />
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ToDoItemFullModel> ToDoItems { get; set; } = new();
+
+    private Type ModelType { get; } = typeof(ToDoItemFullModel);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InitToDoItems();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task InitToDoItems() => ToDoItems = await service.GetListAsync();
+}
