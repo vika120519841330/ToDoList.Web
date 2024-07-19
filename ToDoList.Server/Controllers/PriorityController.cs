@@ -15,6 +15,8 @@ public class PriorityController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<PriorityResponse>), 200)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IEnumerable<PriorityResponse>> Get([FromHeader] CancellationToken token = default)
         => await priorityService.GetPriorities(token);
 }

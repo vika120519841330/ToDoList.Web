@@ -1,9 +1,10 @@
 ﻿using AutoMapper;
+using ToDoList.Interfaces;
 using ToDoList.Server.Repositories;
 
 namespace ToDoList.Server.Services;
 
-public abstract class ServiceBase
+public abstract class ServiceBase: INotify
 {
     protected readonly IMapper mapper;
     protected readonly AppRepositories appRepositories;
@@ -12,4 +13,6 @@ public abstract class ServiceBase
         this.appRepositories = appRepositories;
         this.mapper = mapper;
     }
+
+    public string Message { get; protected set; } = string.Empty;
 }

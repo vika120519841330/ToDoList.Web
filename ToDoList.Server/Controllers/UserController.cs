@@ -15,6 +15,8 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<UserResponse>), 200)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IEnumerable<UserResponse>> Get([FromHeader] CancellationToken token = default)
         => await userService.GetUsers(token);
 }

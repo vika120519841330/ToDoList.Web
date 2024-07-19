@@ -45,4 +45,52 @@ public class ToDoItemService : ServiceBase
 
         return result?.ToList() ?? new();
     }
+
+    public async Task<ToDoItemRequest> CreateToDoItem(ToDoItemRequest item, CancellationToken token = default)
+    {
+        if (item == null)
+        {
+            Message = "Задача не может быть добавлена в систему - она пустая";
+            return null;
+        }
+
+        var itemToAdd = mapper.Map<ToDoItem>(item);
+        var addedItem = await appRepositories.ToDoItems.CreateAsync(itemToAdd, token);
+        Message = appRepositories?.ToDoItems?.Message ?? string.Empty;
+
+        if (addedItem == null) return null;
+
+        return mapper.Map<ToDoItemRequest>(addedItem);
+    }
+
+    public async Task<ToDoItemRequest> UpdateToDoItem(ToDoItemRequest item, CancellationToken token = default)
+    {
+        if (item == null)
+        {
+            Message = "Задача не может быть обновлена в системе - она пустая";
+            return null;
+        }
+
+        var itemToAdd = mapper.Map<ToDoItem>(item);
+        var updatedItem = await appRepositories.ToDoItems.UpdateAsync(itemToAdd, token);
+        Message = appRepositories?.ToDoItems?.Message ?? string.Empty;
+
+        if (updatedItem == null) return null;
+
+        return mapper.Map<ToDoItemRequest>(updatedItem);
+    }
+
+    public async Task<bool> RemoveToDoItem(int itemId, CancellationToken token = default)
+    {
+        if (itemId == 0)
+        {
+            Message = "Задача не может быть удалена из системы - идентификатор пустой";
+            return false;
+        }
+
+        var result = await appRepositories.ToDoItems.RemoveAsync(itemId, token);
+        Message = appRepositories?.ToDoItems?.Message ?? string.Empty;
+
+        return result;
+    }
 }

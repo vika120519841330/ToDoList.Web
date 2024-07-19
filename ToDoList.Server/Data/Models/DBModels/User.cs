@@ -11,5 +11,5 @@ public class User
 
     public string Name { get; set; }
 
-    public List<ToDoItem> ToDoItems { get; set; }
+    public List<ToDoItem> ToDoItems { get; set; } = new();
 }
