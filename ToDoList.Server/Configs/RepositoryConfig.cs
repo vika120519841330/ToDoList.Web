@@ -9,6 +9,8 @@ public static class RepositoryConfig
 {
     public static void AddRepositories(this IServiceCollection services)
     {
-        services.AddTransient<IRepository<ToDoItem>, Repository<ToDoItem>>();
+        services.AddTransient<ITRepository<ToDoItem>, TRepository<ToDoItem>>();
+        services.AddTransient<ITRepository<Priority>, TRepository<Priority>>();
+        services.AddTransient<ITRepository<User>, TRepository<User>>();
     }
 }

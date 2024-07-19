@@ -22,9 +22,6 @@ public static class DbContextConfig
             options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         };
 
-        services.AddDbContext<AppDbContext>(
-            options => optionBuilder(options), ServiceLifetime.Transient);
-
         services.AddDbContextFactory<AppDbContext>(
             options => optionBuilder(options), ServiceLifetime.Transient);
     }

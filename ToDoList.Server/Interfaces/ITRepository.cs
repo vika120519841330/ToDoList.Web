@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 namespace ToDoList.Interfaces;
-public interface IRepository<T> : INotify
+public interface ITRepository<T> : INotify
     where T : class
 {
     Task<List<T>> GetAsync(CancellationToken token = default);

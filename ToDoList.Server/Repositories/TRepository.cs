@@ -7,13 +7,13 @@ using ToDoList.Server.Data.Context;
 using ToDoList.Server.Helpers;
 
 namespace ToDoList.Repositories;
-public class Repository<T> : IRepository<T>
+public class TRepository<T> : ITRepository<T>
     where T : class
 {
     private readonly IDbContextFactory<AppDbContext> contextFactory;
     private string message;
 
-    public Repository(IDbContextFactory<AppDbContext> contextFactory) => this.contextFactory = contextFactory;
+    public TRepository(IDbContextFactory<AppDbContext> contextFactory) => this.contextFactory = contextFactory;
 
     public string Message => message ?? string.Empty;
 
