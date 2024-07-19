@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "ToDoList.Web": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:5126",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
