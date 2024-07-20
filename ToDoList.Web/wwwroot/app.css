@@ -49,3 +49,19 @@ h1:focus {
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
 }
+
+.flexRow {
+    display: flex;
+    display: -webkit-flex;
+    flex-wrap: wrap; /* ћногострочный контейнер */
+    width: 100%;
+    flex-direction: row; /* Ќаправление главной оси контейнера - горизонтальное */
+    justify-content: flex-start; /* ¬ыравнивание по главной оси */
+    align-content: flex-start; /* ¬ыравнивание по поперечной оси всех строк контейнера */
+    align-items: flex-start; /* ¬ыравнивание по поперечной оси внутри строки */
+}
+
+    .flexRow div {
+        margin-left: 10px;
+    }
+

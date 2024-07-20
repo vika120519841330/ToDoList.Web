@@ -1,0 +1,196 @@
+﻿@using System.Reflection
+@typeparam T
+@inherits TSearchBase<T>
+
+<div class="search">
+    @if (IsRenderLabelForSearch)
+    {
+        <span>@LabelForSearch</span>
+    }
+    <button type="button"
+            class="search_btn"
+            title="Поиск"
+            @onclick="@(() => { ShowSearchElement = ShowSearchElement ? false : true;
+                                if(ShowSearchElement) ResetSearchValues(); })" />
+</div>
+<div class="@ListClassName">
+    <input type="text"
+           placeholder="Поиск.."
+           autofocus
+           @bind-value="@SearchString"
+           @bind-value:event="oninput" />
+    <ul>
+        <li @onclick="@(async() => { await SelectionChanged("Выбрать всё"); })">
+            Выбрать всё
+        </li>
+        <li @onclick="@(async() => { await SelectionChanged("Отменить выбор"); })">
+            Отменить выбор
+        </li>
+        @if (ValuePropIsNullable)
+        {
+            <li @onclick="@(async() => { await SelectionChanged("Пустые"); })">Пустые</li>
+            <li @onclick="@(async() => { await SelectionChanged("Не пустые"); })">Не пустые</li>
+        }
+        @foreach (var searchedTItem in SearchedItems ?? new())
+        {
+            var optionValue = GetValuePropertyValue(searchedTItem);
+            var optionValueString = optionValue?.ToString() ?? string.Empty;
+            object labelValue = null;
+
+            if (string.IsNullOrEmpty(optionValueString)) continue;
+
+            var optionValueId = $"{TType.Name}_{ValuePropInfo.Name}_id_{optionValueString}";
+
+            if (ValuePropInfoType == typeof(bool) && bool.TryParse(optionValueString, out var boolean))
+            {
+                labelValue = boolean ? "Да" : "Нет";
+                <li @onclick="@(async() => { await SelectionChanged(labelValue); })">
+                    @labelValue
+                </li>
+            }
+            else
+            {
+                var isChecked = SelectedItemsValues?.Any(selectedItemValue => GetStringKeyPropertyValue(selectedItemValue) == GetStringKeyPropertyValue(searchedTItem)) ?? false;
+                labelValue = StyleFormat != null ? StyleFormat(optionValue) : optionValueString;
+                <li>
+                    <div class="squaredCheckbox">
+                        @if (isChecked)
+                        {
+                            <input type="checkbox"
+                                   id="@optionValueId"
+                                   checked
+                                   @oninput="@(async() => { await SelectionChanged(searchedTItem); })" />
+                            <label for="@optionValueId">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@labelValue</label>
+                        }
+                        else
+                        {
+                            <input type="checkbox"
+                                   id="@optionValueId"
+                                   @oninput="@(async() => { await SelectionChanged(searchedTItem); })" />
+                            <label for="@optionValueId">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@labelValue</label>
+                        }
+                    </div>
+                </li>
+            }
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter]
+    public List<T> Items { get; set; } = new();
+
+    [Parameter]
+    public Func<object, string> StyleFormat { get; set; }
+
+    private Type TType => typeof(T);
+
+    private List<T> SelectedItemsValues { get; set; } = new();
+
+    private bool ShowSearchElement { get; set; }
+
+    private string ListClassName => ShowSearchElement ? "show" : "notShow";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        ResetValues();
+    }
+
+    public void ResetValues()
+    {
+        ResetSearchValues();
+        SelectedItemsValues = (InitParameters?.Count ?? 0) == 0 ? new() : new(InitParameters);
+    }
+
+    private void ResetSearchValues()
+    {
+        searchString = string.Empty;
+        SearchedItems = new(Items);
+    }
+
+    protected async Task SelectionChanged(object selectedValue)
+    {
+        var selectedValueString = selectedValue?.ToString() ?? string.Empty;
+        if (selectedValueString.Equals("Выбрать всё", StringComparison.InvariantCultureIgnoreCase))
+        {
+            SearchedItems?.ForEach(searchedItem =>
+            {
+                if (!SelectedItemsValues.Any(selectedItemValue => GetKeyPropertyValue(selectedItemValue) == GetKeyPropertyValue(searchedItem)))
+                    SelectedItemsValues?.Add(searchedItem);
+            });
+        }
+        if (selectedValueString.Equals("Отменить выбор", StringComparison.InvariantCultureIgnoreCase))
+        {
+            SelectedItemsValues = new();
+        }
+        else if (selectedValueString.Equals("Пустые", StringComparison.InvariantCultureIgnoreCase))
+        {
+            SelectedItemsValues = SearchedItems?.Where(item => string.IsNullOrEmpty(GetStringValueProperty(item)))?.ToList() ?? new();
+        }
+        else if (selectedValueString.Equals("Не пустые", StringComparison.InvariantCultureIgnoreCase))
+        {
+            SelectedItemsValues = SearchedItems?.Where(item => !string.IsNullOrEmpty(GetStringValueProperty(item)))?.ToList() ?? new();
+        }
+        else if (selectedValueString.Equals("Да", StringComparison.InvariantCultureIgnoreCase))
+        {
+            SelectedItemsValues = SearchedItems?.Where(item => bool.TryParse(GetStringValueProperty(item), out var booleanValue) && booleanValue)?.ToList() ?? new();
+        }
+        else if (selectedValueString.Equals("Нет", StringComparison.InvariantCultureIgnoreCase))
+        {
+            SelectedItemsValues = SearchedItems?.Where(item => bool.TryParse(GetStringValueProperty(item), out var booleanValue) && !booleanValue)?.ToList() ?? new();
+        }
+
+        if (SendSelectedItems.HasDelegate)
+            await SendSelectedItems.InvokeAsync(SelectedItemsValues);
+    }
+
+    private async Task SelectionChanged(T selectedValueToAddOrToRemove)
+    {
+        var selectedKeyValue = GetKeyPropertyValue(selectedValueToAddOrToRemove)?.ToString() ?? string.Empty;
+        if (!SelectedItemsValues.Any(itemValue => !string.IsNullOrEmpty(selectedKeyValue) && GetKeyPropertyValue(itemValue).ToString() == selectedKeyValue))
+        {
+            SelectedItemsValues.Add(selectedValueToAddOrToRemove);
+        }
+        else
+        {
+            SelectedItemsValues.Remove(selectedValueToAddOrToRemove);
+        }
+
+        if (SendSelectedItems.HasDelegate)
+            await SendSelectedItems.InvokeAsync(SelectedItemsValues);
+    }
+
+    public override async Task SearchStart()
+    {
+        if (string.IsNullOrEmpty(SearchString))
+            ResetValues();
+        else
+        {
+            SearchedItems = SearchItems() ?? new(); 
+            SelectedItemsValues = SearchedItems;
+        }
+
+        if (SendSelectedItems.HasDelegate)
+            await SendSelectedItems.InvokeAsync(SelectedItemsValues);
+    }
+
+    public List<T> SearchItems()
+    {
+        ConcurrentBag<T> searchedItems = new();
+        ConcurrentBag<T> source = new(Items);
+
+        var result = Parallel.ForEach(source,
+            new ParallelOptions { MaxDegreeOfParallelism = 32 },
+            item =>
+        {
+            var propValue = GetStringValueProperty(item)?.Trim() ?? string.Empty;
+
+            if (!string.IsNullOrEmpty(propValue)
+            && propValue.Contains(SearchString?.Trim() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase))
+                searchedItems.Add(item);
+        });
+
+        return searchedItems?.OrderBy(item => GetKeyPropertyValue(item))?.ToList() ?? new();
+    }
+}

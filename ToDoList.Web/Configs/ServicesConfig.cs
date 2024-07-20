@@ -46,6 +46,8 @@ public static class ServicesConfig
 
         // Project's API
         services.AddTransient<ToDoItemService>();
+        services.AddTransient<PriorityService>();
+        services.AddTransient<UserService>();
 
         // HTTP
         services.AddTransient<HttpService>();

@@ -7,12 +7,7 @@ namespace ToDoList.Web.Services;
 
 public class ToDoItemService : ServiceBase
 {
-    private readonly HttpService httpService;
-
-    public ToDoItemService(HttpService httpService, IOptions<ConfigBase> options) : base(options)
-    {
-        this.httpService = httpService;
-    }
+    public ToDoItemService(HttpService httpService, IOptions<ConfigBase> options) : base(httpService, options) { }
 
     protected override ControllerNames ControllerName => ControllerNames.toDoItem;
 

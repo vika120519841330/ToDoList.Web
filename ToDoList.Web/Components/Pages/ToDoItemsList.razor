@@ -5,16 +5,40 @@
 @using ToDoList.Web.Helpers
 @using ToDoList.Web.Services
 @inherits ComponentBaseClass<ToDoItemFullModel>
-@inject ToDoItemService service
+@inject ToDoItemService toDoService
+@inject PriorityService priorityService
+@inject UserService userService
 
 <PageTitle>Список задач</PageTitle>
 
 @if (!IsRender)
 {
-    <p><em>Loading...</em></p>
+    <p><em>Загрузка...</em></p>
 }
 else
 {
+    <div class="flexRow">
+        <div>
+            <TSearchComponent T="@PriorityModel"
+                              Items="@Priorities"
+                              KeyPropInfo="@(typeof(PriorityModel).GetProperty(nameof(PriorityModel.Id)))"
+                              ValuePropInfo="@(typeof(PriorityModel).GetProperty(nameof(PriorityModel.Level)))"
+                              InitParameters="@Priorities"
+                              LabelForSearch="Приоритет"
+                              IsRenderLabelForSearch="true"
+                              SendSelectedItems="@((List<PriorityModel> selectedItems) => ReactOnPrioritiesSelected(selectedItems))" />
+        </div>
+        <div>
+            <TSearchComponent T="@UserModel"
+                              Items="@Users"
+                              KeyPropInfo="@(typeof(UserModel).GetProperty(nameof(UserModel.Id)))"
+                              ValuePropInfo="@(typeof(UserModel).GetProperty(nameof(UserModel.Name)))"
+                              InitParameters="@Users"
+                              LabelForSearch="Пользователь"
+                              IsRenderLabelForSearch="true"
+                              SendSelectedItems="@((List<UserModel> selectedItems) => ReactOnUsersSelected(selectedItems))" />
+        </div> 
+</div>
     <table class="table">
         <thead>
             <tr>
@@ -29,13 +53,13 @@ else
             </tr>
         </thead>
         <tbody>
-            @if (!ToDoItems.Any())
+            @if (!ToDoItemsFiltered.Any())
             {
                 <tr>
                     <td colspan="9">Задачи осутствуют</td>
                 </tr>
             }
-            @foreach (var toDoItem in ToDoItems ?? new())
+            @foreach (var toDoItem in ToDoItemsFiltered ?? new())
             {
                 var item = toDoItem;
                 var deleteId = item.Id + "delete_btn_id";
@@ -115,6 +139,16 @@ else
 @code {
     private List<ToDoItemFullModel> ToDoItems { get; set; } = new();
 
+    private List<ToDoItemFullModel> ToDoItemsFiltered { get; set; } = new();
+
+    private List<PriorityModel> Priorities { get; set; } = new();
+
+    private List<PriorityModel> PrioritiesSelected { get; set; } = new();
+
+    private List<UserModel> Users { get; set; } = new();
+
+    private List<UserModel> UsersSelected { get; set; } = new();
+
     private ToDoItemFullModel SelectedToDoItem { get; set; }
 
     private bool ShowEditForm { get; set; }
@@ -127,22 +161,30 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync(); 
         await InitToDoItems();
-        await base.OnInitializedAsync();
+        await InitPriorities();
+        await InitUsers();
+        ResetFilteredValues();
         IsRender = true;
     }
 
-    private void IncrementCount()
+    private void ResetFilteredValues()
     {
-        var currentCount = 0;
-        currentCount++;
+        ToDoItemsFiltered = ToDoItems ?? new();
+        PrioritiesSelected = Priorities ?? new();
+        UsersSelected = Users ?? new();
     }
 
-    private async Task InitToDoItems() => ToDoItems = await service.GetListAsync();
+    private async Task InitToDoItems() => ToDoItems = await toDoService.GetListAsync(Token);
+
+    private async Task InitPriorities() => Priorities = await priorityService.GetListAsync(Token);
+
+    private async Task InitUsers() => Users = await userService.GetListAsync(Token);
 
     private async Task DeleteItem()
     {
-        var result = await service.DeleteAsync(SelectedToDoItem.Id, Token);
+        var result = await toDoService.DeleteAsync(SelectedToDoItem.Id, Token);
 
         if (result)
         {
@@ -163,4 +205,25 @@ else
         ShowEditForm = false;
         ShowActionResult = true;
     }
+
+    private void ReactOnPrioritiesSelected(List<PriorityModel> prioritiesSelected)
+    {
+        PrioritiesSelected = prioritiesSelected?.Any() ?? false ? prioritiesSelected : new();
+        ToFilterToDoList();
+    }
+
+    private void ReactOnUsersSelected(List<UserModel> usersSelected)
+    {
+        UsersSelected = usersSelected?.Any() ?? false ? usersSelected : new();
+        ToFilterToDoList();
+    }
+
+    private void ToFilterToDoList() => ToDoItemsFiltered = ToDoItems?.Where(item => IsVisible(item))?.ToList() ?? new();
+
+    private bool IsVisible(ToDoItemFullModel item) => IsEquelByPriority(item) && IsEquelByUser(item);
+
+    private bool IsEquelByPriority(ToDoItemFullModel item) => PrioritiesSelected.Any(priority => item.PriorityId == priority.Id);
+
+    private bool IsEquelByUser(ToDoItemFullModel item) => UsersSelected.Any(user => item.UserId == user.Id);
+
 }
