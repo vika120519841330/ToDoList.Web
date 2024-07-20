@@ -8,9 +8,12 @@ namespace ToDoList.Web.Services;
 public abstract class ServiceBase
 {
     protected readonly string serverHost;
-    public ServiceBase(IOptions<ConfigBase> options)
+    protected readonly HttpService httpService;
+
+    public ServiceBase(HttpService httpService, IOptions<ConfigBase> options)
     {
         serverHost = options.Value.Url;
+        this.httpService = httpService;
     }
 
     protected abstract ControllerNames ControllerName { get; }
