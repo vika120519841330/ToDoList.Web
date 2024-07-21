@@ -1,151 +1,166 @@
 ﻿@page "/"
 @rendermode InteractiveServer
-@using ToDoList.Web.Components.Pages.Base
-@using ToDoList.Web.Data.DTO
-@using ToDoList.Web.Helpers
-@using ToDoList.Web.Services
 @inherits ComponentBaseClass<ToDoItemFullModel>
 @inject ToDoItemService toDoService
 @inject PriorityService priorityService
 @inject UserService userService
 
 <PageTitle>Список задач</PageTitle>
-
-@if (!IsRender)
-{
-    <p><em>Загрузка...</em></p>
-}
-else
-{
-    <div class="flexRow">
-        <div>
-            <TSearchComponent T="@PriorityModel"
-                              Items="@Priorities"
-                              KeyPropInfo="@(typeof(PriorityModel).GetProperty(nameof(PriorityModel.Id)))"
-                              ValuePropInfo="@(typeof(PriorityModel).GetProperty(nameof(PriorityModel.Level)))"
-                              InitParameters="@Priorities"
-                              LabelForSearch="Приоритет"
-                              IsRenderLabelForSearch="true"
-                              SendSelectedItems="@((List<PriorityModel> selectedItems) => ReactOnPrioritiesSelected(selectedItems))" />
+<CascadingValue Value="this">
+    @if (!IsRender)
+    {
+        <p><em>Загрузка...</em></p>
+    }
+    else
+    {
+        <div class="flexRow">
+            <div>
+                <TSearchComponent T="@PriorityModel"
+                                  Items="@Priorities"
+                                  KeyPropInfo="@(typeof(PriorityModel).GetProperty(nameof(PriorityModel.Id)))"
+                                  ValuePropInfo="@(typeof(PriorityModel).GetProperty(nameof(PriorityModel.Level)))"
+                                  InitParameters="@Priorities"
+                                  LabelForSearch="Приоритет"
+                                  IsRenderLabelForSearch="true"
+                                  SendSelectedItems="@((List<PriorityModel> selectedItems) => ReactOnPrioritiesSelected(selectedItems))" />
+            </div>
+            <div>
+                <TSearchComponent T="@UserModel"
+                                  Items="@Users"
+                                  KeyPropInfo="@(typeof(UserModel).GetProperty(nameof(UserModel.Id)))"
+                                  ValuePropInfo="@(typeof(UserModel).GetProperty(nameof(UserModel.Name)))"
+                                  InitParameters="@Users"
+                                  LabelForSearch="Пользователь"
+                                  IsRenderLabelForSearch="true"
+                                  SendSelectedItems="@((List<UserModel> selectedItems) => ReactOnUsersSelected(selectedItems))" />
+            </div>
         </div>
-        <div>
-            <TSearchComponent T="@UserModel"
-                              Items="@Users"
-                              KeyPropInfo="@(typeof(UserModel).GetProperty(nameof(UserModel.Id)))"
-                              ValuePropInfo="@(typeof(UserModel).GetProperty(nameof(UserModel.Name)))"
-                              InitParameters="@Users"
-                              LabelForSearch="Пользователь"
-                              IsRenderLabelForSearch="true"
-                              SendSelectedItems="@((List<UserModel> selectedItems) => ReactOnUsersSelected(selectedItems))" />
-        </div> 
-</div>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.Id))</th>
-                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.Title))</th>
-                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.Description))</th>
-                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.DueDate))</th>
-                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.PriorityValue))</th>
-                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.UserName))</th>
-                <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.IsCompleted))</th>
-                <th colspan="2">Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (!ToDoItemsFiltered.Any())
-            {
+        <table class="table">
+            <thead>
                 <tr>
-                    <td colspan="9">Задачи осутствуют</td>
+                    <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.Id))</th>
+                    <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.Title))</th>
+                    <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.Description))</th>
+                    <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.DueDate))</th>
+                    <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.PriorityValue))</th>
+                    <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.UserName))</th>
+                    <th>@ModelType.GetDisplayValue(nameof(ToDoItemFullModel.IsCompleted))</th>
+                    <th colspan="2">Действия</th>
                 </tr>
-            }
-            @foreach (var toDoItem in ToDoItemsFiltered ?? new())
-            {
-                var item = toDoItem;
-                var deleteId = item.Id + "delete_btn_id";
-                var updId = item.Id + "upd_btn_id";
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.Title</td>
-                    <td>@item.Description</td>
-                    <td>@item.DueDate.ToShortDateString()</td>
-                    <td>@item.PriorityValue</td>
-                    <td>@item.UserName</td>
-                    <td>@if(item.IsCompleted)
-                        {
-                            <input type="checkbox" checked disabled/>
-                        }
-                        else
-                        {
-                            <input type="checkbox" disabled />
-                        }
-                    </td>
-                    <td>
-                        <button class="btn btn-primary"
-                                id="@updId"
-                                @onclick="@(() => { SelectedToDoItem = item; 
+            </thead>
+            <tbody>
+                @if (!ToDoItemsFiltered.Any())
+                {
+                    <tr>
+                        <td colspan="9">Задачи осутствуют</td>
+                    </tr>
+                }
+                @foreach (var toDoItem in ToDoItemsFiltered ?? new())
+                {
+                    var item = toDoItem;
+                    var deleteId = item.Id + "delete_btn_id";
+                    var updId = item.Id + "upd_btn_id";
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Title</td>
+                        <td>@item.Description</td>
+                        <td>@(item.DueDate?.ToShortDateString() ?? string.Empty)</td>
+                        <td>@item.PriorityValue</td>
+                        <td>@item.UserName</td>
+                        <td>
+                            @if (item.IsCompleted)
+                            {
+                                <input type="checkbox" checked disabled />
+                            }
+                            else
+                            {
+                                <input type="checkbox" disabled />
+                            }
+                        </td>
+                        <td>
+                            <button class="btn btn-primary"
+                                    id="@updId"
+                                    @onclick="@(() => { SelectedToDoItem = item;
                                                     Title = "Редактирование";
                                                     ShowEditForm = true; })">
-                            Редактировать
-                        </button>
-                    </td>
-                    <td>
-                        <button class="btn btn-primary"
-                                id="@deleteId"
-                                @onclick="@(() => { SelectedToDoItem = item; 
-                                                    Message = "Вы подтверждаете удаление ";
-                                                    Title = "Удаление"; 
-                                                    ShowDeleteConfarmation = true; })">
-                            Удалить
-                        </button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                                Редактировать
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-primary"
+                                    id="@deleteId"
+                                    @onclick="@(() => { SelectedToDoItem = item;
+                                                        Message = "Вы подтверждаете удаление?";
+                                                        Title = "Удаление";
+                                                        ShowDeleteConfarmation = true; })">
+                                Удалить
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div>
+            <button class="btn btn-primary"
+                    @onclick="@(() => { SelectedToDoItem = new();
+                                        Title = "Добавление";
+                                        ShowEditForm = true; })">
+                Добавить
+            </button>
+        </div>
+        @if (ShowEditForm)
+        {
+            <ModalWindow Title="@Title"
+                         InvokeParent="@(() => { ShowEditForm = false; })">
+                <ToDoItemEditForm TItemFromParent="@(Mapper?.Map<ToDoItemModel>(SelectedToDoItem) ?? default)"
+                                  InvokeParentHandlerSuccess="@(async(ToDoItemModel itemAfterAction) => { ShowEditForm = false;
+                                                                                                          Message = "Операция успешно завершена. ";
+                                                                                                          ShowMessage = true; 
+                                                                                                          await InitToDoItems();
+                                                                                                          ToFilterToDoList(); })"
+                                  InvokeParentHandlerError="@((string error) => { ShowEditForm = false;
+                                                                                  Message = error;
+                                                                                  ShowMessage = true; })"
+                                  InvokeParentHandlerCancel="@(() => { ShowEditForm = false;
+                                                                       ShowMessage = true; })" />
+            </ModalWindow>
+        }
 
-    @if (ShowEditForm)
-    {
-        <ModalWindow Title="@Title"
-                     InvokeParent="@(() => { ShowEditForm = false; })">
-                 
-        </ModalWindow>
-    }
+        @if (ShowDeleteConfarmation)
+        {
+            <ModalWindow Title="@Title"
+                         InvokeParent="@(() => { ShowDeleteConfarmation = false; })">
+                <div>Вы подтверждаете удаление задачи? </div>
+                <br />
+                <div>
+                    <button type="button"
+                            @onclick="@(async() => await DeleteItem())">
+                        Удалить
+                    </button>
+                </div>
+            </ModalWindow>
+        }
 
-    @if (ShowDeleteConfarmation)
-    {
-        <ModalWindow Title="@Title"
-                     InvokeParent="@(() => { ShowDeleteConfarmation = false; })">
-            <div>Вы подтверждаете удаление задачи? </div>
-            <br />
-            <div>
-                <button type="button"
-                        @onclick="@(async() => await DeleteItem())">
-                    Удалить
-                </button>
-            </div>
-        </ModalWindow>
+        @if (ShowMessage)
+        {
+            <ModalWindow Title="@Title"
+                         InvokeParent="@(() => { SelectedToDoItem = null; ShowMessage = false; })">
+                <div>@Message</div>
+            </ModalWindow>
+        }
     }
-
-    @if (ShowActionResult)
-    {
-        <ModalWindow Title="@Title"
-                     InvokeParent="@(() => { SelectedToDoItem = null; ShowActionResult = false; })">
-            <div>@Message</div>
-        </ModalWindow>
-    }
-}
+</CascadingValue>
 
 @code {
     private List<ToDoItemFullModel> ToDoItems { get; set; } = new();
 
     private List<ToDoItemFullModel> ToDoItemsFiltered { get; set; } = new();
 
-    private List<PriorityModel> Priorities { get; set; } = new();
+    public List<PriorityModel> Priorities { get; set; } = new();
 
     private List<PriorityModel> PrioritiesSelected { get; set; } = new();
 
-    private List<UserModel> Users { get; set; } = new();
+    public List<UserModel> Users { get; set; } = new();
 
     private List<UserModel> UsersSelected { get; set; } = new();
 
@@ -154,8 +169,6 @@ else
     private bool ShowEditForm { get; set; }
 
     private bool ShowDeleteConfarmation { get; set; }
-
-    private bool ShowActionResult { get; set; }
 
     private bool ShouldUpdate { get; set; }
 
@@ -199,11 +212,14 @@ else
         }
 
         if (ShouldUpdate) 
+        {
             await InitToDoItems();
+            ToFilterToDoList();
+        }
 
         ShowDeleteConfarmation = false;
         ShowEditForm = false;
-        ShowActionResult = true;
+        ShowMessage = true;
     }
 
     private void ReactOnPrioritiesSelected(List<PriorityModel> prioritiesSelected)

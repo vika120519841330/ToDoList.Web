@@ -1,0 +1,203 @@
+﻿@inherits EditFormBase<ToDoItemModel>
+@inject ToDoItemService toDoService
+
+@try
+{
+    @if (!IsRender)
+    {
+        <p><em>Загрузка...</em></p>
+    }
+    else
+    {
+        <div class="form">
+            <EditForm EditContext="EditContext">
+                <DataAnnotationsValidator />
+                @*Title*@
+                <div>
+                    <div>
+                        @(ModelType.GetDisplayValue(nameof(ToDoItemModel.Title)))
+                    </div>
+                    <div>
+                        <InputText @bind-Value="@Model.Title"
+                                   @bind-Value:event="@oninput"
+                                   @oninput="@(() => ValidateModel())" />
+                    </div>
+                    <div>
+                        <ValidationMessage For="@(() => Model.Title)" class="validation-message" />
+                    </div>
+                </div>
+                @*Description*@
+                <div>
+                    <div>
+                        @(ModelType.GetDisplayValue(nameof(ToDoItemModel.Description)))
+                    </div>
+                    <div>
+                        <InputTextArea @bind-Value="@Model.Description"
+                                       @bind-Value:event="@oninput"
+                                       @oninput="@(() => ValidateModel())" />
+                    </div>
+                    <div>
+                        <ValidationMessage For="@(() => Model.Description)" class="validation-message" />
+                    </div>
+                </div>
+                @*IsCompleted*@
+                <div>
+                    <div>
+                        @(ModelType.GetDisplayValue(nameof(ToDoItemModel.IsCompleted)))
+                    </div>
+                    <div>
+                        @if (Model.IsCompleted)
+                        {
+                            <InputCheckbox type="checkbox"
+                                           checked
+                                           @bind-Value="@Model.IsCompleted"
+                                           @bind-Value:event="@oninput"
+                                           @oninput="@(() => ValidateModel())" />
+                        }
+                        else
+                        {
+                            <InputCheckbox type="checkbox"
+                                           @bind-Value="@Model.IsCompleted"
+                                           @bind-Value:event="@oninput"
+                                           @oninput="@(() => ValidateModel())" />
+                        }
+                    </div>
+                    <div>
+                        <ValidationMessage For="@(() => Model.IsCompleted)" class="validation-message" />
+                    </div>
+                </div>
+                @*DueDate*@
+                <div>
+                    <div>
+                        @(ModelType.GetDisplayValue(nameof(ToDoItemModel.DueDate)))
+                    </div>
+                    <div>
+                        <InputDate TValue="DateTime?"
+                                   @bind-Value="@Model.DueDate"
+                                   @bind-Value:event="@oninput"
+                                   @oninput="@(() => ValidateModel())" />
+                    </div>
+                    <div>
+                        <ValidationMessage For="@(() => Model.DueDate)" class="validation-message" />
+                    </div>
+                </div>
+                @*Priority*@
+                <div>
+                    <div>
+                        @(ModelType.GetDisplayValue(nameof(ToDoItemModel.PriorityId)))
+                    </div>
+                    <div>
+                        <InputSelect @bind-Value="@Model.PriorityId"
+                                     @bind-Value:event="@oninput"
+                                     @oninput="@((ChangeEventArgs arg) => ValidateModel())">
+                            @if ((ToDoItemsListCascadingParameter?.Priorities?.Count ?? 0) == 0)
+                            {
+                                <option disabled selected>@LabelListEmpty</option>
+                            }
+                            else
+                            {
+                                <option value=0>@LabelNotSelected</option>
+                                @foreach (var priority in ToDoItemsListCascadingParameter?.Priorities?.OrderBy(priorityItem => priorityItem.Level)?.ToList() ?? new())
+                                {
+                                    <option value="@priority.Id">@(priority?.Level.ToString() ?? string.Empty)</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+                    <div>
+                        <ValidationMessage For="@(() => Model.PriorityId)" class="validation-message" />
+                    </div>
+                </div>
+                @*User*@
+                <div>
+                    <div>
+                        @(ModelType.GetDisplayValue(nameof(ToDoItemModel.UserId)))
+                    </div>
+                    <div>
+                        <InputSelect @bind-Value="@Model.UserId"
+                                     @bind-Value:event="@oninput"
+                                     @oninput="@((ChangeEventArgs arg) => ValidateModel())">
+                            @if ((ToDoItemsListCascadingParameter?.Users?.Count ?? 0) == 0)
+                            {
+                                <option disabled selected>@LabelListEmpty</option>
+                            }
+                            else
+                            {
+                                <option value=0>@LabelNotSelected</option>
+                                @foreach (var user in ToDoItemsListCascadingParameter?.Users?.OrderBy(userItem => userItem.Name)?.ToList() ?? new())
+                                {
+                                    <option value="@user.Id">@(user?.Name ?? string.Empty)</option>
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+                    <div>
+                        <ValidationMessage For="@(() => Model.UserId)" class="validation-message" />
+                    </div>
+                </div>
+                @if(IsModelValid)
+                {
+                    <button class="btn btn-primary"
+                            @onclick="@(async() => await DoAction())">
+                        Сохранить
+                    </button>
+                }
+                else
+                {
+                    <div class="validation-message">Данные не валидны</div>
+                }
+            </EditForm>
+        </div>
+    }
+}
+catch(Exception exc)
+{
+    <div>(exc?.Message ?? exc?.InnerException?.Message ?? "Error")</div>
+}
+
+@code {
+    [CascadingParameter]
+    public ToDoItemsList ToDoItemsListCascadingParameter { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override void InitModel()
+    {
+        base.InitModel();
+
+        if (IsCreate)
+            Model.DueDate = DateTime.Now;
+
+        ValidateModel();
+    }
+
+    protected override async Task DoAction()
+    {
+        ToDoItemModel actionResult = default;
+        Message = string.Empty;
+
+        if(IsCreate)
+        {
+            actionResult = await toDoService.CreteAsync(Model, Token);
+        }
+        else
+        {
+            actionResult = await toDoService.UpdateAsync(Model, Token);
+        }
+
+        if (actionResult != null && actionResult != default)
+        {
+            if (InvokeParentHandlerSuccess.HasDelegate)
+                await InvokeParentHandlerSuccess.InvokeAsync(actionResult);
+        }
+        else
+        {
+            Message = toDoService.NotifyMessage ?? "Операция закончилась с ошибкой. ";
+            if (InvokeParentHandlerCancel.HasDelegate)
+                await InvokeParentHandlerCancel.InvokeAsync(Message);
+        }
+    }
+}
