@@ -27,6 +27,7 @@ public class HttpService
         TRequest content,
         CancellationToken token = default)
     {
+        NotifyMessage = string.Empty;
         var request = url.GetRequestMessage(httpMethod, content);
         var response = await HttpClient.SendRequest(request, token);
 
@@ -44,6 +45,7 @@ public class HttpService
         HttpMethod httpMethod,
         CancellationToken token = default)
     {
+        NotifyMessage = string.Empty;
         var request = url.GetRequestMessage(httpMethod);
         var response = await HttpClient.SendRequest(request, token);
 

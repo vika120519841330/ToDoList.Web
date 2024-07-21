@@ -1,10 +1,16 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Components;
 using ToDoList.Web.Data.DTO;
 
 namespace ToDoList.Web.Components.Pages.Base;
 
 public class ComponentBaseClass<T> : ComponentBase, IDisposable
+    where T : class, ICloneable, new()
 {
+
+    [Inject]
+    public IMapper Mapper { get; set; }
+
     protected Type ModelType { get; } = typeof(T);
 
     private CancellationTokenSource TokenSource => new();
@@ -16,6 +22,8 @@ public class ComponentBaseClass<T> : ComponentBase, IDisposable
     public string Message { get; set; }
 
     public string Title { get; set; }
+
+    protected bool ShowMessage { get; set; }
 
     public void Dispose()
     {
@@ -33,5 +41,11 @@ public class ComponentBaseClass<T> : ComponentBase, IDisposable
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+    }
+
+    protected async Task RenderMessage()
+    {
+        ShowMessage = true;
+        await InvokeAsync(StateHasChanged);
     }
 }

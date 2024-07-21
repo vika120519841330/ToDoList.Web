@@ -10,6 +10,8 @@ public abstract class ServiceBase
     protected readonly string serverHost;
     protected readonly HttpService httpService;
 
+    public string NotifyMessage => httpService?.NotifyMessage ?? string.Empty;
+
     public ServiceBase(HttpService httpService, IOptions<ConfigBase> options)
     {
         serverHost = options.Value.Url;
