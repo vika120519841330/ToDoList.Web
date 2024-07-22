@@ -19,11 +19,23 @@ public static class ServicesConfig
         // Cache
         services.AddDistributedMemoryCache();
 
+        // добавление кэшированияRedis
+#if DEBUG
+        services.AddStackExchangeRedisCache(options => {
+            options.Configuration = "localhostRedis";
+            options.InstanceName = "localRedis";
+        });
+#endif
+
         // Sessions
         services.AddSession();
 
         services.AddRazorPages();
-        services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
+        services.AddServerSideBlazor().AddCircuitOptions(options => 
+        {
+            options.DetailedErrors = true; 
+            options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(15); 
+        });
 
         // Регистрация HttpClient 
         services.AddResponseCompression(opts =>

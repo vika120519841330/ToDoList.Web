@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Caching.Distributed;
 using ToDoList.Web.Data.DTO;
 
 namespace ToDoList.Web.Components.Pages.Base;
@@ -10,6 +11,9 @@ public class ComponentBaseClass<T> : ComponentBase, IDisposable
 
     [Inject]
     public IMapper Mapper { get; set; }
+
+    [Inject]
+    public IDistributedCache CacheRedis { get; set; }
 
     protected Type ModelType { get; } = typeof(T);
 
