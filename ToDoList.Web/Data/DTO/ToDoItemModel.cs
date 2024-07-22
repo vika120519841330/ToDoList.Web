@@ -9,7 +9,7 @@ public class ToDoItemModel : ICloneable
     public int Id { get; set; }
 
     [Display(Name = "Наименование")]
-    [StringLength(maximumLength: 50, MinimumLength = 5, ErrorMessage = "Описание не должно превышать 100 символов")]
+    [StringLength(50, MinimumLength = 5, ErrorMessage = "Длина описания должна быть от {2} до {1} символов")]
     public string Title { get; set; } = string.Empty;
 
     [Display(Name = "Описание")]
