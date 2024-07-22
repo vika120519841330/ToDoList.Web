@@ -48,6 +48,8 @@ public class EditFormBase<T> : ComponentBaseClass<T>
 
     protected string LabelNotSelected => "Ничего не выбрано";
 
+    protected string NotValidMassage => "Данные не валидны";
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -82,7 +84,7 @@ public class EditFormBase<T> : ComponentBaseClass<T>
             Model = TItemFromParent != null ? TItemFromParent.Clone() as T : new();
     }
 
-    protected virtual void ValidateModel()
+    protected virtual (bool isValid, string error) ValidateModel()
     {
         var validResult = Model?.ValidateModel();
         var errors = string.Empty;
@@ -91,13 +93,13 @@ public class EditFormBase<T> : ComponentBaseClass<T>
             validResult.Value.errors?.ForEach(error => errors += error);
         }
 
-        IsModelValid = validResult.HasValue && validResult.Value.isValid;
-        ValidErrors = validResult.HasValue ? errors : "Модель не валидная";
+        return (validResult.HasValue && validResult.Value.isValid,
+                validResult.HasValue ? errors : NotValidMassage);
     }
 
-    protected virtual bool IsModelValid { get; private set; }
+    protected virtual bool IsModelValid => ValidateModel().isValid;
 
-    protected virtual string ValidErrors { get; private set; }
+    protected virtual string ValidErrors => ValidateModel().error;
 
     protected virtual async Task DoAction() => await Task.FromResult(true);
 }
