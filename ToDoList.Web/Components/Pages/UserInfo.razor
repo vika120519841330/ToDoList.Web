@@ -1,0 +1,46 @@
+﻿@page "/userinfo"
+@rendermode InteractiveServer
+@using ToDoList.Web.Components.Pages.Base
+@inherits CacheProviderBase
+@inject NavigationManager nav
+
+@if (IsRender)
+{
+    <ModalWindow Title="Информация о подключении"
+                 InvokeParent="@(async() => nav.NavigateTo(ReturnUrl))">
+        <div>
+            @FromCash
+        </div>
+    </ModalWindow>
+}
+else
+{
+    <p><em>Загрузка...</em></p>
+}
+
+@code {
+    [Parameter]
+    public string ReturnUrl { get; set; } = "/";
+
+    private string FromCash { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await InitUserIp();
+        FromCash = await GetStringFromCache("user_info");
+        IsRender = true;
+    }
+
+    private async Task InitUserIp()
+    {
+        var connectionInfo = HttpContext.HttpContext?.Request?.HttpContext?.Connection;
+        if (connectionInfo != default)
+            UserInfo = $"{nameof(ConnectionInfo.RemoteIpAddress)}: {connectionInfo.RemoteIpAddress?.ToString() ?? string.Empty}, {connectionInfo.RemotePort}; " +
+            $"{nameof(ConnectionInfo.LocalIpAddress)}: {connectionInfo.LocalIpAddress?.ToString() ?? string.Empty}, {connectionInfo.LocalPort}; ";
+        else
+            UserInfo = string.Empty;
+
+        await SetStringInfoToCache("user_info", UserInfo);
+    }
+}

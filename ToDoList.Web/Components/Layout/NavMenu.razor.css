@@ -24,6 +24,12 @@
     font-size: 1.1rem;
 }
 
+.bottom_block {
+    position: absolute;
+    bottom: 30px;
+    left: 25%;
+}
+
 .bi {
     display: inline-block;
     position: relative;

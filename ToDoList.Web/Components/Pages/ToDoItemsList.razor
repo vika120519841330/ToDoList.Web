@@ -1,6 +1,6 @@
 ﻿@page "/"
 @rendermode InteractiveServer
-@inherits ComponentBaseClass<ToDoItemFullModel>
+@inherits ComponentBaseClass
 @inject ToDoItemService toDoService
 @inject PriorityService priorityService
 @inject UserService userService
@@ -152,6 +152,8 @@
 </CascadingValue>
 
 @code {
+    private Type ModelType => typeof(ToDoItemFullModel);
+
     private List<ToDoItemFullModel> ToDoItems { get; set; } = new();
 
     private List<ToDoItemFullModel> ToDoItemsFiltered { get; set; } = new();
@@ -165,12 +167,6 @@
     private List<UserModel> UsersSelected { get; set; } = new();
 
     private ToDoItemFullModel SelectedToDoItem { get; set; }
-
-    private bool ShowEditForm { get; set; }
-
-    private bool ShowDeleteConfarmation { get; set; }
-
-    private bool ShouldUpdate { get; set; }
 
     protected override async Task OnInitializedAsync()
     {

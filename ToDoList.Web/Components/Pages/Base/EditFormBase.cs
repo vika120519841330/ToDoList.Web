@@ -6,11 +6,13 @@ using ToDoList.Web.Helpers;
 
 namespace ToDoList.Web.Components.Pages.Base;
 
-public class EditFormBase<T> : ComponentBaseClass<T> 
+public class EditFormBase<T> : ComponentBaseClass 
     where T : class, ICloneable, new()
 {
     [Parameter]
     public T TItemFromParent { get; set; }
+
+    protected Type ModelType { get; } = typeof(T);
 
     protected EditContext EditContext;
 

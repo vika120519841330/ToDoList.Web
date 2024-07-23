@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Configuration;
 using System.ComponentModel.Design;
 using ToDoList.Web.Services;
 
@@ -21,14 +22,17 @@ public static class ServicesConfig
 
         // добавление кэшированияRedis
 #if DEBUG
-        services.AddStackExchangeRedisCache(options => {
-            options.Configuration = "localhostRedis";
-            options.InstanceName = "localRedis";
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = $"{config.GetValue<string>("RedisCache:Host")}:{config.GetValue<int>("RedisCache:Port")}";
+            options.InstanceName = "ToDoServiceCashing";
         });
 #endif
 
         // Sessions
         services.AddSession();
+
+        services.AddHttpContextAccessor();
 
         services.AddRazorPages();
         services.AddServerSideBlazor().AddCircuitOptions(options => 

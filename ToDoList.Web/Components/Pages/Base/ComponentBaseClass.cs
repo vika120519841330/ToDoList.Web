@@ -5,17 +5,10 @@ using ToDoList.Web.Data.DTO;
 
 namespace ToDoList.Web.Components.Pages.Base;
 
-public class ComponentBaseClass<T> : ComponentBase, IDisposable
-    where T : class, ICloneable, new()
+public class ComponentBaseClass : ComponentBase, IDisposable
 {
-
     [Inject]
     public IMapper Mapper { get; set; }
-
-    [Inject]
-    public IDistributedCache CacheRedis { get; set; }
-
-    protected Type ModelType { get; } = typeof(T);
 
     private CancellationTokenSource TokenSource => new();
 
@@ -28,6 +21,12 @@ public class ComponentBaseClass<T> : ComponentBase, IDisposable
     public string Title { get; set; }
 
     protected bool ShowMessage { get; set; }
+
+    protected bool ShowEditForm { get; set; }
+
+    protected bool ShowDeleteConfarmation { get; set; }
+
+    protected bool ShouldUpdate { get; set; }
 
     public void Dispose()
     {
