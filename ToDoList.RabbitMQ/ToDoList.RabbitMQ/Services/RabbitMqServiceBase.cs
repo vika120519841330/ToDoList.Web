@@ -19,7 +19,7 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
 
     protected abstract QueueConfig QueueConfig { get; }
 
-    protected virtual bool Durable => false;
+    protected virtual bool Durable => true;
 
     protected virtual bool Exclusive => false;
 
@@ -35,8 +35,16 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
     {
         if (string.IsNullOrEmpty(message)) return;
 
-        var factory = new ConnectionFactory() { HostName = hostName };
-
+        var factory = new ConnectionFactory()
+        {
+            HostName = "localhost",
+            Port = Protocols.DefaultProtocol.DefaultPort,
+            UserName = "guest",
+            Password = "guest",
+            VirtualHost = "/",
+            ContinuationTimeout = new TimeSpan(10, 0, 0, 0)
+        };
+        
         using var connection = factory.CreateConnection();
         using var channel = connection.CreateModel();
         var queueName = QueueConfig.Name;
