@@ -1,0 +1,6 @@
+@ToDoList.RabbitMQ_HostAddress = http://localhost:5159
+
+GET {{ToDoList.RabbitMQ_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

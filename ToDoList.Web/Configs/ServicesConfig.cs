@@ -20,7 +20,7 @@ public static class ServicesConfig
         // Cache
         services.AddDistributedMemoryCache();
 
-        // добавление кэшированияRedis
+        // добавление кэширования Redis
 #if DEBUG
         services.AddStackExchangeRedisCache(options =>
         {
