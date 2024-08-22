@@ -20,10 +20,6 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
         hostName = options.Value.Host;
     }
 
-    private static string FileName => "message_to_send.json";
-
-    private static string FilePath = Path.Combine("./wwwroot/temp", FileName);
-
     private static ConnectionFactory MQConnectionFactory = new ConnectionFactory()
     {
         HostName = "localhost",
@@ -47,17 +43,20 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
     public async Task<bool> SendMessageAsync<T>(T obj, CancellationToken token = default)
         where T : IMQBase
     {
-        using (var stream = new FileStream(FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
+        var fileName = $"{Path.GetRandomFileName()}.json";
+        var filePath = Path.Combine("./wwwroot/temp", fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
         {
             await JsonSerializer.SerializeAsync<T>(utf8Json: stream, value: obj, cancellationToken: token);
         }
         
-        return SendMessage();
+        return SendMessage(filePath);
     }
 
-    private bool SendMessage()
+    private bool SendMessage(string filePath)
     {
-        if (!File.Exists(FilePath)) return false;
+        if (!File.Exists(filePath)) return false;
 
         using var connection = MQConnectionFactory.CreateConnection();
         using var channel = connection.CreateModel();
@@ -69,9 +68,14 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
                 autoDelete: AutoDelete,
                 arguments: null);
 
-        using var stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        using var reader = new BinaryReader(stream);
-        var body = reader.ReadBytes((Int32)(new FileInfo(FilePath).Length));
+        byte[] body;
+        using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            using var reader = new BinaryReader(stream);
+            body = reader.ReadBytes((Int32)(new FileInfo(filePath).Length));
+        }
+
+        File.Delete(filePath);
 
         channel.BasicPublish(exchange: "",
                 routingKey: queueName,
