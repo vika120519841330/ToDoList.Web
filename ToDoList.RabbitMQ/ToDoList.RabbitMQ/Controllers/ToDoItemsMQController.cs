@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.RabbitMQ.Interfaces;
+using ToDoList.RabbitMQ.MQObjects;
 using ToDoList.RabbitMQ.Services;
 
 namespace ToDoList.RabbitMQ.Controllers
@@ -17,11 +18,28 @@ namespace ToDoList.RabbitMQ.Controllers
 
         [Route("[action]/{message}")]
         [HttpGet]
-        public IActionResult SendMessage(string message)
+        public async Task<IActionResult> SendMessage(string message)
         {
-            mqService.SendMessage(message);
+            var messageToSend = new MQMessage(message);
+            var result = await mqService.SendMessageAsync(messageToSend);
 
-            return Ok("Message where send.");
+            if (result)
+                return Ok($"Sending seccess. Details message: {messageToSend.GetString()}. ");
+            else
+                return StatusCode(503, "Sending failed. ");
+        }
+
+        [Route("[action]")]
+        [HttpPost]
+        public async Task<IActionResult> SendMessage([FromBody]object mqObject)
+        {
+            var messageToSend = new MQObject(mqObject);
+            var result = await mqService.SendMessageAsync(messageToSend);
+
+            if (result)
+                return Ok($"Sending seccess. Details message: {messageToSend.GetString()}. ");
+            else
+                return StatusCode(503, "Sending failed. ");
         }
     }
 }
