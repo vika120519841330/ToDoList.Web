@@ -2,5 +2,5 @@
 
 public interface IRabbitMqServiceBase
 {
-    bool SendMessage<T>(T obj) where T : IMQBase;
+    Task<bool> SendMessage<T>(T obj, CancellationToken token = default) where T : IMQBase;
 }

@@ -30,6 +30,8 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
         ContinuationTimeout = new TimeSpan(10, 0, 0, 0)
     };
 
+    private byte[] Data {  get; set; }
+
     protected abstract QueueConfig QueueConfig { get; }
 
     private string QueueName => QueueConfig?.Name ?? string.Empty;
@@ -40,14 +42,16 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
 
     protected virtual bool AutoDelete => false;
 
-    public bool SendMessage<T>(T obj)
+    public async Task<bool> SendMessage<T>(T obj, CancellationToken token = default)
         where T : IMQBase
-        => SendMessage(JsonSerializer.SerializeToUtf8Bytes<T>(obj));
+        => await await Task.Factory.StartNew(() => Data = JsonSerializer.SerializeToUtf8Bytes<T>(obj), token)
+        .ContinueWith(async (t) => await SendMessage());
 
-    private bool SendMessage(byte[] body)
+    private async Task<bool> SendMessage()
     {
-        if ((body?.Length ?? 0) == 0) return false;
+        if ((Data?.Length ?? 0) == 0) return false;
 
+        var tcs = new TaskCompletionSource<bool>();
         using var connection = MQConnectionFactory.CreateConnection();
         using var channel = connection.CreateModel();
         var queueName = QueueConfig.Name;
@@ -61,8 +65,10 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
         channel.BasicPublish(exchange: "",
                 routingKey: queueName,
                 basicProperties: null,
-                body: body);
+                body: Data);
 
+        tcs.SetResult(true);
+        await tcs.Task;
         return true;
     }
 }
