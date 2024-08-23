@@ -18,10 +18,10 @@ namespace ToDoList.RabbitMQ.Controllers
 
         [Route("[action]/{message}")]
         [HttpGet]
-        public async Task<IActionResult> SendMessage(string message)
+        public IActionResult SendMessage(string message)
         {
             var messageToSend = new MQMessage(message);
-            var result = await mqService.SendMessageAsync(messageToSend);
+            var result =  mqService.SendMessage(messageToSend);
 
             if (result)
                 return Ok($"Sending seccess. Details message: {messageToSend.GetString()}. ");
@@ -31,10 +31,10 @@ namespace ToDoList.RabbitMQ.Controllers
 
         [Route("[action]")]
         [HttpPost]
-        public async Task<IActionResult> SendMessage([FromBody]object mqObject)
+        public IActionResult SendMessage([FromBody]object mqObject)
         {
             var messageToSend = new MQObject(mqObject);
-            var result = await mqService.SendMessageAsync(messageToSend);
+            var result = mqService.SendMessage(messageToSend);
 
             if (result)
                 return Ok($"Sending seccess. Details message: {messageToSend.GetString()}. ");

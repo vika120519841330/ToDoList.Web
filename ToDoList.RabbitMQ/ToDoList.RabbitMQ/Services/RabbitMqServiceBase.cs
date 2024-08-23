@@ -40,23 +40,13 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
 
     protected virtual bool AutoDelete => false;
 
-    public async Task<bool> SendMessageAsync<T>(T obj, CancellationToken token = default)
+    public bool SendMessage<T>(T obj)
         where T : IMQBase
-    {
-        var fileName = $"{Path.GetRandomFileName()}.json";
-        var filePath = Path.Combine("./wwwroot/temp", fileName);
+        => SendMessage(JsonSerializer.SerializeToUtf8Bytes<T>(obj));
 
-        using (var stream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
-        {
-            await JsonSerializer.SerializeAsync<T>(utf8Json: stream, value: obj, cancellationToken: token);
-        }
-        
-        return SendMessage(filePath);
-    }
-
-    private bool SendMessage(string filePath)
+    private bool SendMessage(byte[] body)
     {
-        if (!File.Exists(filePath)) return false;
+        if ((body?.Length ?? 0) == 0) return false;
 
         using var connection = MQConnectionFactory.CreateConnection();
         using var channel = connection.CreateModel();
@@ -67,15 +57,6 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
                 exclusive: Exclusive,
                 autoDelete: AutoDelete,
                 arguments: null);
-
-        byte[] body;
-        using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-        {
-            using var reader = new BinaryReader(stream);
-            body = reader.ReadBytes((Int32)(new FileInfo(filePath).Length));
-        }
-
-        File.Delete(filePath);
 
         channel.BasicPublish(exchange: "",
                 routingKey: queueName,
