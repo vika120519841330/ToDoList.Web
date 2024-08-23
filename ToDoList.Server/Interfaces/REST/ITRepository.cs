@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
+using ToDoList.Interfaces;
 
-namespace ToDoList.Interfaces;
+namespace ToDoList.Server.Interfaces.REST;
 public interface ITRepository<T> : INotify
     where T : class
 {

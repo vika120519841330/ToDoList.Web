@@ -4,7 +4,7 @@ using ToDoList.Server.Data.Models.DBModels;
 using ToDoList.Server.Data.Models.DTO.Response;
 using ToDoList.Server.Repositories;
 
-namespace ToDoList.Server.Services;
+namespace ToDoList.Server.Services.REST;
 
 public class ToDoItemService : ServiceBase
 {
@@ -72,7 +72,7 @@ public class ToDoItemService : ServiceBase
             return null;
         }
 
-        var itemToAdd = mapper.Map<ToDoItem>(item); 
+        var itemToAdd = mapper.Map<ToDoItem>(item);
         var service = appRepositories.ToDoItems;
         var updatedItem = await service.UpdateAsync(itemToAdd, token);
         Message = service?.Message ?? string.Empty;

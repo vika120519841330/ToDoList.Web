@@ -1,8 +1,8 @@
 ﻿using Microsoft.VisualBasic.FileIO;
 using ToDoList.Server.Data.Models.DBModels;
 using ToDoList.Repositories;
-using ToDoList.Interfaces;
 using ToDoList.Server.Repositories;
+using ToDoList.Server.Interfaces.REST;
 
 namespace ToDoList.Server.Configs;
 

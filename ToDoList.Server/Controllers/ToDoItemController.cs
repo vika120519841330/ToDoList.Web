@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using ToDoList.Server.Data.Models.DTO.Response;
-using ToDoList.Server.Services;
+using ToDoList.Server.Services.REST;
 
 namespace ToDoList.Server.Controllers;
 

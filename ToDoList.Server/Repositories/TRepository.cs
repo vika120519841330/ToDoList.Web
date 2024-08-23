@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using ToDoList.Interfaces;
 using ToDoList.Server.Data.Context;
 using ToDoList.Server.Helpers;
+using ToDoList.Server.Interfaces.REST;
 
 namespace ToDoList.Repositories;
 public class TRepository<T> : ITRepository<T>

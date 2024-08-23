@@ -4,6 +4,7 @@ using Serilog;
 using ToDoList.Server.Configs;
 using ToDoList.Server.Data.Context;
 using ToDoList.Server.Data.Models.DBModels;
+using ToDoList.Server.Services.Mq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,8 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddDBContext(builder.Configuration);
 builder.Services.AddRepositories();
-builder.Services.AddServices();
+builder.Services.AddServices(builder.Configuration);
+builder.Services.AddHostedService<ToDoItemMqServiceConsumer>();
 
 builder.Services.AddRequestDecompression();
 builder.Services.AddControllers();

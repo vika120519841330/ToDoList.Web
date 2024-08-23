@@ -2,7 +2,7 @@
 using ToDoList.Server.Data.Models.DTO.Response;
 using ToDoList.Server.Repositories;
 
-namespace ToDoList.Server.Services;
+namespace ToDoList.Server.Services.REST;
 
 public class UserService : ServiceBase
 {

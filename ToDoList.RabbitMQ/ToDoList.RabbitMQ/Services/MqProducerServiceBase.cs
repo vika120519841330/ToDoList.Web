@@ -3,18 +3,18 @@ using RabbitMQ.Client;
 using System.Text.Json;
 using System.Text;
 using ToDoList.RabbitMQ.Configs;
-using ToDoList.RabbitMQ.Interfaces;
 using System.Text.Json.Serialization.Metadata;
 using System.IO;
+using ToDoList.RabbitMQ.Interfaces;
 
 namespace ToDoList.RabbitMQ.Services;
 
-public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
+public abstract class MqProducerServiceBase : IMqProducerServiceBase
 {
     private readonly string hostName;
     protected readonly IOptions<QueueConfigs> options;
 
-    public RabbitMqServiceBase(IOptions<QueueConfigs> options)
+    public MqProducerServiceBase(IOptions<QueueConfigs> options)
     {
         this.options = options;
         hostName = options.Value.Host;
@@ -52,18 +52,18 @@ public abstract class RabbitMqServiceBase : IRabbitMqServiceBase
         if ((Data?.Length ?? 0) == 0) return false;
 
         var tcs = new TaskCompletionSource<bool>();
+
         using var connection = MQConnectionFactory.CreateConnection();
         using var channel = connection.CreateModel();
-        var queueName = QueueConfig.Name;
 
-        channel.QueueDeclare(queue: queueName,
+        channel.QueueDeclare(queue: QueueName,
                 durable: Durable,
                 exclusive: Exclusive,
                 autoDelete: AutoDelete,
                 arguments: null);
 
         channel.BasicPublish(exchange: "",
-                routingKey: queueName,
+                routingKey: QueueName,
                 basicProperties: null,
                 body: Data);
 

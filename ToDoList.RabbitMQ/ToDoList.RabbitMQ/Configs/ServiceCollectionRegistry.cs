@@ -8,6 +8,6 @@ public static class ServiceCollectionRegistry
     public static void AddServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<QueueConfigs>(configuration.GetSection("RabbitMQConfigs"));
-        services.AddTransient<IToDoItemMqService, ToDoItemMqService>();
+        services.AddTransient<IToDoItemMqServiceProducer, ToDoItemMqServiceProducer>();
     }
 }

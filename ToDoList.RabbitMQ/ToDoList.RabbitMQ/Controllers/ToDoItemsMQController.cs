@@ -9,9 +9,9 @@ namespace ToDoList.RabbitMQ.Controllers
     [Route("[controller]")]
     public class ToDoItemsMQController : ControllerBase
     {
-        private readonly IToDoItemMqService mqService;
+        private readonly IToDoItemMqServiceProducer mqService;
 
-        public ToDoItemsMQController(IToDoItemMqService mqService)
+        public ToDoItemsMQController(IToDoItemMqServiceProducer mqService)
         {
             this.mqService = mqService;
         }
