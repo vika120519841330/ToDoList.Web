@@ -65,6 +65,6 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
             channel.BasicAck(ea.DeliveryTag, false);
         };
 
-        channel.BasicConsume(QueueName, false, consumer);
+        channel.BasicConsume(QueueName, true, consumer);
     }
 }

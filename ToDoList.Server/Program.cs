@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using Serilog;
 using ToDoList.Server.Configs;
 using ToDoList.Server.Data.Context;
@@ -37,7 +39,7 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 PrimaryDataInit(app);
-
+ConsumeToMessages();
 app.Run();
 
 static void PrimaryDataInit(WebApplication app)
@@ -87,5 +89,40 @@ static void PrimaryDataInit(WebApplication app)
     };
     context.ToDoItems.AddRange(toDoItem1, toDoItem2);
     context.SaveChanges();
+}
+
+static void ConsumeToMessages()
+{
+    var MQConnectionFactory = new ConnectionFactory()
+    {
+        HostName = "localhost",
+        Port = Protocols.DefaultProtocol.DefaultPort,
+        UserName = "guest",
+        Password = "guest",
+        VirtualHost = "/",
+        ContinuationTimeout = new TimeSpan(10, 0, 0, 0)
+    };
+
+using var connection = MQConnectionFactory.CreateConnection();
+    using var channel = connection.CreateModel();
+
+    var queue = channel.QueueDeclare(queue: "ToDoitemQueue",
+        durable: true,
+        exclusive: false,
+        autoDelete: false,
+        arguments: null);
+
+    if (queue == null) return;
+
+    var consumer = new EventingBasicConsumer(channel);
+    consumer.Received += async (ch, ea) =>
+    {
+        if (ea != null && !ea.Body.IsEmpty) return;
+        Console.WriteLine(ea?.Body.ToArray());
+
+        channel.BasicAck(ea.DeliveryTag, false);
+    };
+
+    channel.BasicConsume("ToDoitemQueue", true, consumer);
 }
 
