@@ -22,7 +22,7 @@ namespace ToDoList.Server.Services.Mq
 
             // TODO:
 
-            Console.WriteLine($"{DateTime.Now.ToShortTimeString()} Received message: «{item}»");
+            Console.WriteLine($"{DateTime.Now.ToLongTimeString()} Received message: «{item}»");
         }
     }
 }

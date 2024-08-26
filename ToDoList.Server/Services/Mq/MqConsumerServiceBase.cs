@@ -32,7 +32,11 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
 
     protected virtual bool AutoDelete => false;
 
-    private IConnection GetMqConnection()
+    private IConnection Connection {  get; set; }
+
+    private IModel Channel { get; set; }
+
+    private void InitMqConnection()
     {
         var factory = new ConnectionFactory
         {
@@ -44,30 +48,26 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
             ContinuationTimeout = new TimeSpan(10, 0, 0, 0),
         };
 
-        var connectionMq = factory.CreateConnection();
-
-        return connectionMq;
+        Connection = factory.CreateConnection();
     }
 
-    private IModel GetMqChannel(IConnection connection)
+    private void InitMqChannel()
     {
-        IModel model = connection.CreateModel();
+        Channel = Connection.CreateModel();
 
-        model.ExchangeDeclare(exchange: QueueName,
+        Channel.ExchangeDeclare(exchange: QueueName,
             type: ExchangeType.Direct,
             durable: Durable,
             autoDelete: AutoDelete,
             arguments: null);
 
-        model.QueueDeclare(queue: QueueName,
+        Channel.QueueDeclare(queue: QueueName,
             durable: Durable,
             exclusive: Exclusive,
             autoDelete: AutoDelete,
             null);
 
-        model.QueueBind(queue: QueueName, exchange: QueueName, routingKey: QueueName, null);
-
-        return model;
+        Channel.QueueBind(queue: QueueName, exchange: QueueName, routingKey: QueueName, null);
     }
 
     protected static JsonSerializerOptions SerializersOptions
@@ -88,9 +88,9 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
     private string ReceiveIndividualMessage()
     {
         string originalMessage = string.Empty;
-        using var connection = GetMqConnection();
-        using var channel = GetMqChannel(connection);
-        var result = channel.BasicGet(QueueName, false);
+        InitMqConnection();
+        InitMqChannel();
+        var result = Channel.BasicGet(QueueName, false);
         if (result != null)
         {
             var body = result.Body.ToArray();
@@ -105,10 +105,10 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
 
         var action = async (byte[] data) => await ProcessContent(data, stoppingToken);
 
-        var connection = GetMqConnection();
-        var channel = GetMqChannel(connection);
+        InitMqConnection();
+        InitMqChannel();
 
-        var consumer = new EventingBasicConsumer(channel);
+        var consumer = new EventingBasicConsumer(Channel);
         consumer.Received += async (ch, ea) =>
         {
             if (ea != null && !ea.Body.IsEmpty)
@@ -116,9 +116,16 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
                 await action.Invoke(ea?.Body.ToArray());
             }
 
-            channel.BasicAck(ea.DeliveryTag, false);
+            Channel.BasicAck(ea.DeliveryTag, false);
         };
 
-        var consumerTag = channel.BasicConsume(QueueName, true, consumer);
+        var consumerTag = Channel.BasicConsume(QueueName, true, consumer);
+    }
+
+    public override void Dispose()
+    {
+        Channel.Dispose();
+        Connection.Dispose();
+        base.Dispose();
     }
 }

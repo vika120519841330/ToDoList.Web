@@ -24,5 +24,8 @@ public class ToDoItemRequest
     public int UserId { get; set; }
 
     public override string ToString()
-    => $"{nameof(Title)} = {Title}; {nameof(Description)} = {Description ?? string.Empty}; {nameof(DueDate)} = {DueDate}; {nameof(IsCompleted)} = {IsCompleted}; ";
+        => $"{nameof(Title)} = {Title}; " +
+        $"{nameof(Description)} = {Description ?? string.Empty}; " +
+        $"{nameof(DueDate)} = {DueDate}; " +
+        $"{nameof(IsCompleted)} = {IsCompleted}; ";
 }
