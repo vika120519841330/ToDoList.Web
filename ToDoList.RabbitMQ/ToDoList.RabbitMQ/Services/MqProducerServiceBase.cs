@@ -6,6 +6,7 @@ using ToDoList.RabbitMQ.Configs;
 using System.Text.Json.Serialization.Metadata;
 using System.IO;
 using ToDoList.RabbitMQ.Interfaces;
+using System.Text.Json.Serialization;
 
 namespace ToDoList.RabbitMQ.Services;
 
@@ -19,6 +20,19 @@ public abstract class MqProducerServiceBase : IMqProducerServiceBase
         this.options = options;
         hostName = options.Value.Host;
     }
+
+    private static JsonSerializerOptions SerializersOptions
+    => new JsonSerializerOptions
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNameCaseInsensitive = false,
+        IncludeFields = false,
+        IgnoreReadOnlyFields = true,
+        IgnoreReadOnlyProperties = false,
+        MaxDepth = 3,
+        DefaultBufferSize = 32 * 1024 * 1024, // 16Kb default - up to 32Mb
+        UnknownTypeHandling = JsonUnknownTypeHandling.JsonElement,
+    };
 
     private static ConnectionFactory MQConnectionFactory = new ConnectionFactory()
     {
@@ -44,14 +58,14 @@ public abstract class MqProducerServiceBase : IMqProducerServiceBase
 
     public async Task<bool> SendMessage<T>(T obj, CancellationToken token = default)
         where T : IMQBase
-        => await await Task.Factory.StartNew(() => Data = JsonSerializer.SerializeToUtf8Bytes<T>(obj), token)
-        .ContinueWith(async (t) => await SendMessage());
+        => await await Task.Factory.StartNew(() => Data = JsonSerializer.SerializeToUtf8Bytes<T>(value: obj, options: SerializersOptions))
+        .ContinueWith(async (t) => await SendMessage(token));
 
-    private async Task<bool> SendMessage()
+    private async Task<bool> SendMessage(CancellationToken token = default)
     {
         if ((Data?.Length ?? 0) == 0) return false;
 
-        var tcs = new TaskCompletionSource<bool>();
+        var tcs = new TaskCompletionSource<bool>(token);
 
         using var connection = MQConnectionFactory.CreateConnection();
         using var channel = connection.CreateModel();

@@ -5,6 +5,8 @@ using ToDoList.Server.Configs;
 using System.Text;
 using System.Threading.Channels;
 using ToDoList.Server.Interfaces.MQ;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 namespace ToDoList.Server.Services.Mq;
 
@@ -18,6 +20,19 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
         this.options = options;
         hostName = options.Value.Host;
     }
+
+    protected static JsonSerializerOptions SerializersOptions
+        => new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNameCaseInsensitive = false,
+            IncludeFields = false,
+            IgnoreReadOnlyFields = true,
+            IgnoreReadOnlyProperties = false,
+            MaxDepth = 3,
+            DefaultBufferSize = 32 * 1024 * 1024, // 16Kb default - up to 32Mb
+            UnknownTypeHandling = JsonUnknownTypeHandling.JsonElement,
+        };
 
     private static ConnectionFactory MQConnectionFactory = new ConnectionFactory()
     {
@@ -39,7 +54,7 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
 
     protected virtual bool AutoDelete => false;
 
-    protected abstract Task ProcessContent(byte[] content);
+    protected abstract Task ProcessContent(byte[] content, CancellationToken token);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -60,7 +75,7 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
         consumer.Received += async (ch, ea) =>
         {
             if (ea != null && !ea.Body.IsEmpty) return;
-                await ProcessContent(ea?.Body.ToArray());
+                await ProcessContent(ea?.Body.ToArray(), stoppingToken);
 
             channel.BasicAck(ea.DeliveryTag, false);
         };
