@@ -18,7 +18,7 @@ namespace ToDoList.RabbitMQ.Controllers
 
         [Route("[action]/{message}")]
         [HttpGet]
-        public async Task<IActionResult> SendMessage(string message)
+        public async Task<IActionResult> SendMessage([FromRoute]string message, [FromHeader] CancellationToken token = default)
         {
             var messageToSend = new MQMessage(message);
             var result = await  mqService.SendMessage(messageToSend);
@@ -31,7 +31,7 @@ namespace ToDoList.RabbitMQ.Controllers
 
         [Route("[action]")]
         [HttpPost]
-        public async Task<IActionResult> SendMessage([FromBody]object mqObject)
+        public async Task<IActionResult> SendMessage([FromBody]object mqObject, [FromHeader] CancellationToken token = default)
         {
             var messageToSend = new MQObject(mqObject);
             var result = await mqService.SendMessage(messageToSend);

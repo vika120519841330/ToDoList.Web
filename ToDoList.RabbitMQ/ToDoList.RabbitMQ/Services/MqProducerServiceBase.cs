@@ -21,6 +21,56 @@ public abstract class MqProducerServiceBase : IMqProducerServiceBase
         hostName = options.Value.Host;
     }
 
+    private byte[] Data { get; set; }
+
+    protected abstract QueueConfig QueueConfig { get; }
+
+    private string QueueName => QueueConfig?.Name ?? string.Empty;
+
+    protected virtual bool Durable => true;
+
+    protected virtual bool Exclusive => false;
+
+    protected virtual bool AutoDelete => false;
+
+    private IConnection GetMqConnection()
+    {
+        var factory = new ConnectionFactory
+        {
+            VirtualHost = "/",
+            HostName = "localhost",
+            Port = Protocols.DefaultProtocol.DefaultPort,
+            UserName = "guest",
+            Password = "guest",
+            ContinuationTimeout = new TimeSpan(10, 0, 0, 0),
+        };
+
+        var connectionMq = factory.CreateConnection();
+
+        return connectionMq;
+    }
+
+    private IModel GetMqChannel(IConnection connection)
+    {
+        IModel model = connection.CreateModel();
+
+        model.ExchangeDeclare(exchange: QueueName,
+            type: ExchangeType.Direct, 
+            durable: Durable,
+            autoDelete: AutoDelete,
+            arguments: null);
+
+        model.QueueDeclare(queue: QueueName, 
+            durable: Durable,
+            exclusive: Exclusive,
+            autoDelete: AutoDelete,
+            null);
+
+        model.QueueBind(queue: QueueName, exchange: QueueName, routingKey: QueueName, null);
+
+        return model;
+    }
+
     private static JsonSerializerOptions SerializersOptions
     => new JsonSerializerOptions
     {
@@ -34,28 +84,6 @@ public abstract class MqProducerServiceBase : IMqProducerServiceBase
         UnknownTypeHandling = JsonUnknownTypeHandling.JsonElement,
     };
 
-    private static ConnectionFactory MQConnectionFactory = new ConnectionFactory()
-    {
-        HostName = "localhost",
-        Port = Protocols.DefaultProtocol.DefaultPort,
-        UserName = "guest",
-        Password = "guest",
-        VirtualHost = "/",
-        ContinuationTimeout = new TimeSpan(10, 0, 0, 0)
-    };
-
-    private byte[] Data {  get; set; }
-
-    protected abstract QueueConfig QueueConfig { get; }
-
-    private string QueueName => QueueConfig?.Name ?? string.Empty;
-
-    protected virtual bool Durable => true;
-
-    protected virtual bool Exclusive => false;
-
-    protected virtual bool AutoDelete => false;
-
     public async Task<bool> SendMessage<T>(T obj, CancellationToken token = default)
         where T : IMQBase
         => await await Task.Factory.StartNew(() => Data = JsonSerializer.SerializeToUtf8Bytes<T>(value: obj, options: SerializersOptions))
@@ -67,16 +95,10 @@ public abstract class MqProducerServiceBase : IMqProducerServiceBase
 
         var tcs = new TaskCompletionSource<bool>(token);
 
-        using var connection = MQConnectionFactory.CreateConnection();
-        using var channel = connection.CreateModel();
+        using var connection = GetMqConnection();
+        using var channel = GetMqChannel(connection);
 
-        channel.QueueDeclare(queue: QueueName,
-                durable: Durable,
-                exclusive: Exclusive,
-                autoDelete: AutoDelete,
-                arguments: null);
-
-        channel.BasicPublish(exchange: "",
+        channel.BasicPublish(exchange: QueueName,
                 routingKey: QueueName,
                 basicProperties: null,
                 body: Data);
