@@ -10,8 +10,6 @@ namespace ToDoList.Server.Services.Mq
 {
     public class ToDoItemMqServiceConsumer : MqConsumerServiceBase, IToDoItemMqServiceConsumer
     {
-    private readonly string hostName;
-
         public ToDoItemMqServiceConsumer(IOptions<QueueConfigs> options) : base(options) { }
 
         protected override QueueConfig QueueConfig
@@ -24,7 +22,7 @@ namespace ToDoList.Server.Services.Mq
 
             // TODO:
 
-            Console.WriteLine(content);
+            Console.WriteLine($"{DateTime.Now.ToShortTimeString()} Received message: «{item}»");
         }
     }
 }

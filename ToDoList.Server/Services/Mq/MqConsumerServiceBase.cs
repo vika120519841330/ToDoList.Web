@@ -103,27 +103,22 @@ public abstract class MqConsumerServiceBase : BackgroundService, IMqConsumerServ
     {
         stoppingToken.ThrowIfCancellationRequested();
 
-        using var connection = GetMqConnection();
-        using var channel = GetMqChannel(connection);
+        var action = async (byte[] data) => await ProcessContent(data, stoppingToken);
 
-        //var subscription = new Subscription(model, queueName, false);
-        //while (true)
-        //{
-        //    BasicDeliverEventArgs basicDeliveryEventArgs = subscription.Next();
-        //    string messageContent = Encoding.UTF8.GetString(basicDeliveryEventArgs.Body);
-        //    messagesTextBox.Invoke((MethodInvoker)delegate { messagesTextBox.Text += messageContent + "\r\n"; });
-        //    subscription.Ack(basicDeliveryEventArgs);
-        //}
+        var connection = GetMqConnection();
+        var channel = GetMqChannel(connection);
 
         var consumer = new EventingBasicConsumer(channel);
         consumer.Received += async (ch, ea) =>
         {
-            if (ea != null && !ea.Body.IsEmpty) return;
-                await ProcessContent(ea?.Body.ToArray(), stoppingToken);
+            if (ea != null && !ea.Body.IsEmpty)
+            {
+                await action.Invoke(ea?.Body.ToArray());
+            }
 
             channel.BasicAck(ea.DeliveryTag, false);
         };
 
-        channel.BasicConsume(QueueName, true, consumer);
+        var consumerTag = channel.BasicConsume(QueueName, true, consumer);
     }
 }

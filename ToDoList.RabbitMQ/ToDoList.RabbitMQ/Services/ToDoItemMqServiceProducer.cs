@@ -7,7 +7,6 @@ namespace ToDoList.RabbitMQ.Services;
 
 public class ToDoItemMqServiceProducer : MqProducerServiceBase, IToDoItemMqServiceProducer
 {
-    private readonly string hostName;
 
     public ToDoItemMqServiceProducer(IOptions<QueueConfigs> options) : base(options) { }
 

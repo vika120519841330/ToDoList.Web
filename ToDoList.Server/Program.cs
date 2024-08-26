@@ -20,6 +20,8 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDBContext(builder.Configuration);
 builder.Services.AddRepositories();
 builder.Services.AddServices(builder.Configuration);
+
+// RabbitMQ
 builder.Services.AddHostedService<ToDoItemMqServiceConsumer>();
 
 builder.Services.AddRequestDecompression();

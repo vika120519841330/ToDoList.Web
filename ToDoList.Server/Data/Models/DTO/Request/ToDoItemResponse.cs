@@ -22,4 +22,7 @@ public class ToDoItemRequest
     public int PriorityId { get; set; }
 
     public int UserId { get; set; }
+
+    public override string ToString()
+    => $"{nameof(Title)} = {Title}; {nameof(Description)} = {Description ?? string.Empty}; {nameof(DueDate)} = {DueDate}; {nameof(IsCompleted)} = {IsCompleted}; ";
 }

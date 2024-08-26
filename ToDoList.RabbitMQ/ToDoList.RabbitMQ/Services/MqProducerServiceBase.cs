@@ -55,12 +55,12 @@ public abstract class MqProducerServiceBase : IMqProducerServiceBase
         IModel model = connection.CreateModel();
 
         model.ExchangeDeclare(exchange: QueueName,
-            type: ExchangeType.Direct, 
+            type: ExchangeType.Direct,
             durable: Durable,
             autoDelete: AutoDelete,
             arguments: null);
 
-        model.QueueDeclare(queue: QueueName, 
+        model.QueueDeclare(queue: QueueName,
             durable: Durable,
             exclusive: Exclusive,
             autoDelete: AutoDelete,
@@ -95,8 +95,8 @@ public abstract class MqProducerServiceBase : IMqProducerServiceBase
 
         var tcs = new TaskCompletionSource<bool>(token);
 
-        using var connection = GetMqConnection();
-        using var channel = GetMqChannel(connection);
+        var connection = GetMqConnection();
+        var channel = GetMqChannel(connection);
 
         channel.BasicPublish(exchange: QueueName,
                 routingKey: QueueName,
